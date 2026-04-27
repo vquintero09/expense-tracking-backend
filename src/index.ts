@@ -1,16 +1,15 @@
 import express from "express";
 import cors from "cors";
-import { PORT } from "./config.js";
+import { env } from "./config.ts";
+import { ExpenseRouter } from "./routes/expenseRouter.ts";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Hello, World!");
-});
+app.use("/expenses", ExpenseRouter);
 
-app.listen(PORT, () => {
-  console.log(`http://localhost:${PORT}`);
+app.listen(env.PORT, () => {
+  console.log(`http://localhost:${env.PORT}`);
 });
