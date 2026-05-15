@@ -6,12 +6,12 @@ POST http://localhost:3000/expenses
 Content-Type: application/json
 
 {
-  "amount": 150,
-  "category_id": "66f3df4b-fa22-4569-9d60-8f863e90b7d7",
-  "account_id": "ddb283dd-3a9f-4374-991d-59cd71438504",
-  "date": "2024-06-01",
-  "description": "transport expense"
+  "description": "Grocery shopping",
+  "amount": 2500,
+  "date": "2026-05-15",
+  "category_id": "ca634af4-5e41-4456-89d8-ecc3cdcd8525",
+  "account_id": "be0844fe-8dcc-4db7-8532-29e2c9f1543f"
 }
 
 ### HTTP Request to Delete an Expense
-DELETE http://localhost:3000/expenses/0791a50c-0972-439e-a8f9-ba87f0a3af9e
+DELETE http://localhost:3000/expenses/9e2e2503-d517-4034-966f-30e797d32856

@@ -14,6 +14,7 @@ export class ExpenseController {
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const newExpense = await ExpenseModel.createExpense({ input: req.body });
+      console.log("New Expense Created:", newExpense); // Agrega este log para verificar el nuevo gasto creado
       res.status(201).json(newExpense);
     } catch (error) {
       res
