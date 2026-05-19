@@ -1,17 +1,18 @@
 ### HTTP Request to Get All Expenses
-GET http://localhost:3000/expenses
+GET http://localhost:3000/movements
 
 ### HTTP Request to Create a New Expense
-POST http://localhost:3000/expenses
+POST http://localhost:3000/movements
 Content-Type: application/json
 
 {
-  "description": "Grocery shopping",
-  "amount": 2500,
-  "date": "2026-05-15",
-  "category_id": "ca634af4-5e41-4456-89d8-ecc3cdcd8525",
-  "account_id": "be0844fe-8dcc-4db7-8532-29e2c9f1543f"
+  "movement_type": "expense",
+  "description": "Hello",
+  "amount": "100",
+  "date": "2026-05-12",
+  "category_id": "ee5bb237-23f9-4b6b-aca6-9f8a13f1f9ae",
+  "account_id": "ad09f676-af8a-4d81-ad15-c82ce6886088"
 }
 
 ### HTTP Request to Delete an Expense
-DELETE http://localhost:3000/expenses/9e2e2503-d517-4034-966f-30e797d32856
+DELETE http://localhost:3000/movements/9e2e2503-d517-4034-966f-30e797d32856

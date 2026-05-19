@@ -1,10 +1,11 @@
-import { IExpenseResponse } from "../types/expense.interface.ts";
+import { IMovementResponse } from "../types/movement.interface.ts";
 
 //interfaz para representar la fila aplanada que devuelve el JOIN en PostgreSQL
 //Es la interfaz interna del mapper, no se expone fuera
 
-export interface IExpenseRow {
+export interface IMovementRow {
   id: string;
+  movement_type: "income" | "expense";
   amount: number;
   category_id: string;
   category_name: string; // Agregado para mapear el nombre de la categoría
@@ -13,9 +14,12 @@ export interface IExpenseRow {
   date: string;
   description: string;
 }
-export const mapExpenseRowToResponse = (row: IExpenseRow): IExpenseResponse => {
+export const mapMovementRowToResponse = (
+  row: IMovementRow,
+): IMovementResponse => {
   return {
     id: row.id,
+    movement_type: row.movement_type,
     description: row.description,
     amount: Number(row.amount),
     date: row.date,
