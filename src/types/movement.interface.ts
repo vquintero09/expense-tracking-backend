@@ -1,6 +1,9 @@
+export type MovementType = "income" | "expense";
+
 // Entidades internas (filas tal cual en DB)
-export interface IExpenseRow {
+export interface IMovementRow {
   id: string;
+  movement_type: MovementType;
   amount: number;
   category_id: string;
   account_id: string;
@@ -9,7 +12,8 @@ export interface IExpenseRow {
 }
 
 // Payloads de creación (lo que envía el frontend)
-export interface ICreateExpense {
+export interface ICreateMovement {
+  movement_type: MovementType;
   amount: number;
   category_id: string;
   account_id: string;
@@ -28,8 +32,9 @@ export interface IAccountResponse {
   name: string;
 }
 
-export interface IExpenseResponse {
+export interface IMovementResponse {
   id: string;
+  movement_type: MovementType;
   description: string;
   amount: number;
   date: string;
