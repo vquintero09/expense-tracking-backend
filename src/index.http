@@ -16,3 +16,29 @@ Content-Type: application/json
 
 ### HTTP Request to Delete an Expense
 DELETE http://localhost:3000/movements/9e2e2503-d517-4034-966f-30e797d32856
+
+### Get all Categories
+GET http://localhost:3000/categories
+
+### CREATE A NEW CATEGORY
+POST  http://localhost:3000/categories
+Content-Type: application/json
+
+{
+  "category_type": "expense",
+  "name": "Netflix and Child",
+  "icon": "movies",
+  "bg_color": "red" 
+}
+
+### UPDATE A CATEGORY
+PUT http://localhost:3000/categories/cec4b486-8fc9-4beb-92cf-1c0769a8f0ea
+Content-Type: application/json
+
+{
+  "icon": "pets",
+  "color": "Morado"
+}
+
+### DELETE A CATEGORY
+DELETE http://localhost:3000/categories/cec4b486-8fc9-4beb-92cf-1c0769a8f0ea
