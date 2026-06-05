@@ -59,10 +59,21 @@ export class categoryModel {
   }: {
     id: string;
   }): Promise<ICategoryResponse | null> {
-    const result = await pool.query(`DELETE FROM categories WHERE id = $1`, [
-      id,
-    ]);
+    // Primero obtener la categoría antes de eliminarla
+    const selectResult = await pool.query(
+      `SELECT * FROM categories WHERE id = $1`,
+      [id],
+    );
 
-    return result.rows[0];
+    if (selectResult.rows.length === 0) {
+      return null;
+    }
+
+    const categoryToDelete = selectResult.rows[0];
+
+    // Luego eliminarla
+    await pool.query(`DELETE FROM categories WHERE id = $1`, [id]);
+
+    return categoryToDelete;
   }
 }
