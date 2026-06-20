@@ -1,25 +1,29 @@
 import { Request, Response } from "express";
-import { validateCreateAccount } from "../schemas/account.schema.ts";
+import {
+  validateCreateAccount,
+  validateUpdateAccount,
+} from "../schemas/account.schema.ts";
 import { AccountModel } from "../models/postsgres/accountModel.ts";
 import { isUniqueViolation } from "../utils/helpers/isUniqueViolation.ts";
+import { validate as validateUUID } from "uuid";
 
 export class AccountController {
   static async createAccount(req: Request, res: Response): Promise<void> {
-    const resultValiation = validateCreateAccount(req.body);
+    const resultValidation = validateCreateAccount(req.body);
 
-    if (!resultValiation.success) {
+    if (!resultValidation.success) {
       res.status(400).json({
         error: "Validación fallida",
-        details: resultValiation.error.flatten(),
+        details: resultValidation.error.flatten(),
       });
       return;
     }
 
-    const validatedDate = resultValiation.data;
+    const validatedData = resultValidation.data;
 
     try {
       const newAccount = await AccountModel.createNewAccount({
-        input: validatedDate,
+        input: validatedData,
       });
 
       console.log(newAccount);
@@ -36,6 +40,49 @@ export class AccountController {
       res
         .status(500)
         .json({ error: "Error al crear el movimiento", errormessage: err });
+    }
+  }
+
+  static async updateAccount(
+    req: Request<{ id: string }>,
+    res: Response,
+  ): Promise<void> {
+    const { id } = req.params;
+
+    // Validar UUID
+    if (!validateUUID(id)) {
+      res.status(404).json({ error: "Cuenta no encontrada" });
+      return;
+    }
+
+    const resultValidation = validateUpdateAccount(req.body);
+
+    if (!resultValidation.success) {
+      res.status(400).json({
+        error: "Validación faliida",
+        details: resultValidation.error.flatten(),
+      });
+      return;
+    }
+
+    const validateData = resultValidation.data;
+
+    try {
+      const updateAccount = await AccountModel.updateAccount({
+        id,
+        inputData: validateData,
+      });
+
+      if (!updateAccount) {
+        res.status(404).json({ error: "Cuenta no encontrada" });
+        return;
+      }
+
+      res.status(200).json(updateAccount);
+    } catch (err) {
+      res
+        .status(500)
+        .json({ error: "Error al actualizar la cuenta", errorMessage: err });
     }
   }
 }

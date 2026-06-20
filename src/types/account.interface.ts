@@ -14,6 +14,11 @@ export interface ICreateAccount {
   initial_balance: number;
   bg_color: string;
 }
+// Payload de actualización
+export interface IUpdateAccount {
+  name?: string;
+  bg_color?: string;
+}
 
 // Respuestas publicas
 export interface IAccountResponse {
@@ -24,10 +29,4 @@ export interface IAccountResponse {
   bg_color: string;
   created_at: string;
   updated_at: string;
-}
-
-// Payload de actualización
-export interface IUpdateAccount {
-  name?: string;
-  color?: string;
 }
