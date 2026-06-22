@@ -6,6 +6,73 @@ import {
 } from "../../types/account.interface.ts";
 
 export class AccountModel {
+  static async getAllAccounts(): Promise<IAccountResponse[]> {
+    const result = await pool.query<IAccountResponse>(
+      `SELECT
+        a.id,
+        a.name,
+        a.initial_balance,
+        a.bg_color,
+        a.created_at,
+        a.updated_at,
+        a.initial_balance + COALESCE(SUM(
+          CASE 
+            WHEN e.movement_type = 'income' THEN e.amount
+            WHEN e.movement_type = 'expense' THEN -e.amount
+            ELSE 0
+          END
+        ), 0) AS current_balance
+        FROM accounts a
+        LEFT JOIN expenses e ON e.account_id = a.id
+        GROUP BY a.id, a.name, a.initial_balance, a.bg_color, a.created_at, a.updated_at
+        ORDER BY a.created_at ASC`,
+    );
+
+    return result.rows.map((row) => ({
+      ...row,
+      initial_balance: Number(row.initial_balance),
+      current_balance: Number(row.current_balance),
+    }));
+  }
+
+  static async getAccountById({
+    id,
+  }: {
+    id: string;
+  }): Promise<IAccountResponse | null> {
+    const result = await pool.query<IAccountResponse>(
+      `SELECT
+        a.id,
+        a.name,
+        a.initial_balance,
+        a.bg_color,
+        a.created_at,
+        a.updated_at,
+        a.initial_balance + COALESCE(SUM(
+          CASE 
+            WHEN e.movement_type = 'income' THEN e.amount
+            WHEN e.movement_type = 'expense' THEN -e.amount
+            ELSE 0
+          END
+        ), 0) AS current_balance
+        FROM accounts a
+        LEFT JOIN expenses e ON e.account_id = a.id
+        WHERE a.id = $1
+        GROUP BY a.id, a.name, a.initial_balance, a.bg_color, a.created_at, a.updated_at`,
+      [id],
+    );
+
+    if (result.rows.length === 0) return null;
+
+    const row = result.rows[0];
+
+    return {
+      ...row,
+      initial_balance: Number(row.initial_balance),
+      current_balance: Number(row.current_balance),
+    };
+  }
+
   static async createNewAccount({
     input,
   }: {

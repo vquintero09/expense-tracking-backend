@@ -8,6 +8,44 @@ import { isUniqueViolation } from "../utils/helpers/isUniqueViolation.ts";
 import { validate as validateUUID } from "uuid";
 
 export class AccountController {
+  static async getAllAccounts(req: Request, res: Response): Promise<void> {
+    try {
+      const accounts = await AccountModel.getAllAccounts();
+      res.status(200).json(accounts);
+    } catch (err) {
+      res
+        .status(500)
+        .json({ error: "Error al obtener las cuentas", errormessage: err });
+    }
+  }
+
+  static async getAccount(
+    req: Request<{ id: string }>,
+    res: Response,
+  ): Promise<void> {
+    const { id } = req.params;
+
+    if (!validateUUID(id)) {
+      res.status(404).json({ error: "Cuenta no encontrada" });
+      return;
+    }
+
+    try {
+      const account = await AccountModel.getAccountById({ id });
+
+      if (!account) {
+        res.status(404).json({ error: "Cuenta no encontrada" });
+        return;
+      }
+
+      res.status(200).json(account);
+    } catch (err) {
+      res
+        .status(500)
+        .json({ error: "Error al obtener la cuenta", errormessage: err });
+    }
+  }
+
   static async createAccount(req: Request, res: Response): Promise<void> {
     const resultValidation = validateCreateAccount(req.body);
 
