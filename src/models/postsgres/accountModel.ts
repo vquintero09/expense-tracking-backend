@@ -54,4 +54,23 @@ export class AccountModel {
 
     return result.rows[0];
   }
+
+  static async deleteAccount({
+    id,
+  }: {
+    id: string;
+  }): Promise<IAccountResponse | null> {
+    const seletecAccount = await pool.query(
+      `SELECT * FROM accounts WHERE id = $1`,
+      [id],
+    );
+
+    if (seletecAccount.rows.length === 0) return null;
+
+    const accountToDelete = seletecAccount.rows[0];
+
+    await pool.query(`DELETE FROM accounts WHERE id = $1`, [id]);
+
+    return accountToDelete;
+  }
 }

@@ -85,4 +85,31 @@ export class AccountController {
         .json({ error: "Error al actualizar la cuenta", errorMessage: err });
     }
   }
+
+  static async deleteAccount(
+    req: Request<{ id: string }>,
+    res: Response,
+  ): Promise<void> {
+    const { id } = req.params;
+
+    if (!validateUUID(id)) {
+      res.status(400).json({ error: "Cuenta no encontrada" });
+      return;
+    }
+
+    try {
+      const deletedAccount = await AccountModel.deleteAccount({ id });
+
+      if (!deletedAccount) {
+        res.status(404).json({ error: "Cuenta no encontrada" });
+        return;
+      }
+
+      res.status(200).json(deletedAccount);
+    } catch (err) {
+      res
+        .status(500)
+        .json({ error: "Error al eliminar la cuenta", errorMessage: err });
+    }
+  }
 }
