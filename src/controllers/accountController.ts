@@ -150,4 +150,15 @@ export class AccountController {
         .json({ error: "Error al eliminar la cuenta", errorMessage: err });
     }
   }
+
+  static async getTotalBalance(_req: Request, res: Response): Promise<void> {
+    try {
+      const total = await AccountModel.getTotalBalance();
+      res.status(200).json(total);
+    } catch (err) {
+      res
+        .status(500)
+        .json({ error: "Error al obtener el total", errormessage: err });
+    }
+  }
 }

@@ -30,3 +30,7 @@ export interface IAccountResponse {
   created_at: string;
   updated_at: string;
 }
+
+export interface ITotalBalance {
+  total_accounts_balance: number;
+}

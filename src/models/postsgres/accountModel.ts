@@ -2,6 +2,7 @@ import { pool } from "../../db/connection.ts";
 import {
   IAccountResponse,
   ICreateAccount,
+  ITotalBalance,
   IUpdateAccount,
 } from "../../types/account.interface.ts";
 
@@ -139,5 +140,29 @@ export class AccountModel {
     await pool.query(`DELETE FROM accounts WHERE id = $1`, [id]);
 
     return accountToDelete;
+  }
+
+  static async getTotalBalance(): Promise<ITotalBalance> {
+    const result = await pool.query(
+      `WITH account_balances AS (
+        select a.id, a.initial_balance + COALESCE(SUM(
+          CASE 
+            WHEN e.movement_type = 'income' THEN e.amount
+            WHEN e.movement_type = 'expense' THEN -e.amount
+            ELSE 0
+          END
+        ), 0) AS current_balance
+        FROM accounts a
+        LEFT JOIN expenses e ON e.account_id = a.id
+        GROUP BY a.id, a.initial_balance
+      )
+      -- Consulta principal que utiliza la CTE
+      SELECT SUM(current_balance) as total_accounts_balance
+      FROM account_balances;`,
+    );
+
+    return {
+      total_accounts_balance: Number(result.rows[0].total_accounts_balance),
+    };
   }
 }
