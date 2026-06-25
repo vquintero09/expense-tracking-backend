@@ -20,6 +20,15 @@ export interface IUpdateAccount {
   bg_color?: string;
 }
 
+//Params interface
+export interface IAccountMovementsParams {
+  id: string;
+  page: number;
+  limit: number;
+  from?: string;
+  to?: string;
+}
+
 // Respuestas publicas
 export interface IAccountResponse {
   id: string;
@@ -33,4 +42,24 @@ export interface IAccountResponse {
 
 export interface ITotalBalance {
   total_accounts_balance: number;
+}
+
+export interface IAccountMovementsResponse {
+  data: IMovementItem[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface IMovementItem {
+  id: string;
+  movement_type: "income" | "expense";
+  description: string;
+  amount: number;
+  date: string;
+  category: {
+    id: string;
+    name: string;
+  };
 }

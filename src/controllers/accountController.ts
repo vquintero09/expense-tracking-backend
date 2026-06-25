@@ -161,4 +161,37 @@ export class AccountController {
         .json({ error: "Error al obtener el total", errormessage: err });
     }
   }
+
+  static async getMovementsByAccount(
+    req: Request<{ id: string }>,
+    res: Response,
+  ): Promise<void> {
+    const { id } = req.params;
+
+    if (!validateUUID(id)) {
+      res.status(400).json({ error: "Cuenta no encontrada" });
+      return;
+    }
+
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+    const from = req.query.from as string | undefined;
+    const to = req.query.to as string | undefined;
+
+    try {
+      const AccountMovements = await AccountModel.getMovementsByAccount({
+        id,
+        limit,
+        page,
+        from,
+        to,
+      });
+
+      res.status(200).json(AccountMovements);
+    } catch (err) {
+      res
+        .status(500)
+        .json({ error: "Error al obtener los movimientos", errormessage: err });
+    }
+  }
 }

@@ -1,5 +1,8 @@
 import { pool } from "../../db/connection.ts";
+import { mapMovement } from "../../mappers/movementAccountMapper.ts";
 import {
+  IAccountMovementsParams,
+  IAccountMovementsResponse,
   IAccountResponse,
   ICreateAccount,
   ITotalBalance,
@@ -163,6 +166,64 @@ export class AccountModel {
 
     return {
       total_accounts_balance: Number(result.rows[0].total_accounts_balance),
+    };
+  }
+
+  static async getMovementsByAccount({
+    id,
+    limit,
+    page,
+    from,
+    to,
+  }: IAccountMovementsParams): Promise<IAccountMovementsResponse> {
+    const offset = (page - 1) * limit;
+
+    //filtros opcionales de fecha
+    const consditions = ["e.account_id = $1"];
+    const values = [id];
+    let paramIndex = 2;
+
+    if (from) {
+      consditions.push(`e.date >= $${paramIndex}`);
+      values.push(from);
+      paramIndex++;
+    }
+
+    if (to) {
+      consditions.push(`e.date <= $${paramIndex}`);
+      values.push(to);
+      paramIndex++;
+    }
+
+    const whereClause = `WHERE ${consditions.join(" AND ")}`;
+
+    // Query de datos paginados
+    const dataResult = await pool.query(
+      `SELECT e.id, e.movement_type, e.description, e.amount, e.date, c.id AS category_id, c.name AS category_name
+      FROM expenses e
+      LEFT JOIN categories c ON c.id = e.category_id
+      ${whereClause}
+      ORDER BY e.date DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+      [...values, limit, offset],
+    );
+
+    // Query de total de registros (sin paginar)
+    const countResult = await pool.query(
+      `SELECT COUNT(*) AS TOTAL
+      FROM expenses e
+      ${whereClause}`,
+      [...values],
+    );
+
+    const total = Number(countResult.rows[0].total);
+
+    return {
+      data: dataResult.rows.map(mapMovement),
+      total,
+      page,
+      limit,
+      total_pages: Math.ceil(total / limit),
     };
   }
 }
