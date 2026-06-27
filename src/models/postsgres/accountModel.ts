@@ -4,6 +4,8 @@ import {
   IAccountMovementsParams,
   IAccountMovementsResponse,
   IAccountResponse,
+  IAdjustBalance,
+  IAdjustBalanceResponse,
   ICreateAccount,
   ITotalBalance,
   IUpdateAccount,
@@ -225,5 +227,84 @@ export class AccountModel {
       limit,
       total_pages: Math.ceil(total / limit),
     };
+  }
+
+  static async accountBalanceAdjustment({
+    id,
+    input,
+  }: {
+    id: string;
+    input: IAdjustBalance;
+  }): Promise<IAdjustBalanceResponse | null> {
+    const account = await this.getAccountById({ id });
+
+    if (!account) return null;
+
+    const { new_balance, reason } = input;
+    const difference = new_balance - account.current_balance;
+
+    if (difference === 0) {
+      throw new Error(
+        "El saldo actual ya coincide con el nuevo saldo indicado",
+      );
+    }
+
+    const movement_type = difference > 0 ? "income" : "expense";
+    const movement_amount = Math.abs(difference);
+    const description = reason
+      ? `Ajuste de saldo: ${reason}`
+      : "Ajuste de saldo";
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      // Necesitamos una categoría de sistema para el ajuste.
+      // Buscamos si existe, si no la creamos en la transacción.
+      const categoryResult = await client.query(
+        `SELECT id from categories WHERE name = 'Ajuste de saldo' LIMIT 1`,
+      );
+
+      let adjustmentCategoryId: string;
+
+      if (categoryResult.rows.length > 0) {
+        adjustmentCategoryId = categoryResult.rows[0].id;
+      } else {
+        const newCategory = await client.query(
+          `INSERT INTO categories (category_type, name, icon, bg_color)
+          VALUES ($1, $2, $3, $4)
+          RETURNING id`,
+          ["expense", "Ajuste de saldo", "other", "gray"],
+        );
+
+        adjustmentCategoryId = newCategory.rows[0].id;
+      }
+
+      //insertar ajuste de movimiento
+      const movementResult = await client.query(
+        `INSERT INTO expenses (movement_type, description, amount, date, category_id, account_id)
+        VALUES ($1, $2, $3, CURRENT_DATE, $4, $5)`,
+        [movement_type, description, movement_amount, adjustmentCategoryId, id],
+      );
+
+      await client.query("COMMIT");
+
+      const updatedAccount = await this.getAccountById({ id });
+
+      return {
+        account: updatedAccount!,
+        adjustment_movement: mapMovement({
+          ...movementResult.rows[0],
+          category_id: adjustmentCategoryId,
+          category_name: "Ajuste de saldo",
+        }),
+      };
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 }

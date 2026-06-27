@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import {
+  validateAdjustBalance,
   validateCreateAccount,
   validateUpdateAccount,
 } from "../schemas/account.schema.ts";
@@ -192,6 +193,46 @@ export class AccountController {
       res
         .status(500)
         .json({ error: "Error al obtener los movimientos", errormessage: err });
+    }
+  }
+
+  static async adjustBalance(
+    req: Request<{ id: string }>,
+    res: Response,
+  ): Promise<void> {
+    const { id } = req.params;
+
+    if (!validateUUID(id)) {
+      res.status(404).json({ error: "Cuenta no encontrada" });
+      return;
+    }
+
+    const resultValidation = validateAdjustBalance(req.body);
+
+    if (!resultValidation.success) {
+      res.status(400).json({
+        error: "Validación fallida",
+        details: resultValidation.error.flatten(),
+      });
+      return;
+    }
+
+    try {
+      const result = await AccountModel.accountBalanceAdjustment({
+        id,
+        input: resultValidation.data,
+      });
+
+      if (!result) {
+        res.status(404).json({ error: "Cuenta no encontrada" });
+        return;
+      }
+
+      res.status(200).json(result);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Error al ajustar el saldo";
+      res.status(400).json({ error: message });
     }
   }
 }

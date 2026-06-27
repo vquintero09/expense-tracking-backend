@@ -63,3 +63,14 @@ export interface IMovementItem {
     name: string;
   };
 }
+
+// HU-07: Ajuste de saldo
+export interface IAdjustBalance {
+  new_balance: number;
+  reason?: string;
+}
+
+export interface IAdjustBalanceResponse {
+  account: IAccountResponse;
+  adjustment_movement: IMovementItem;
+}

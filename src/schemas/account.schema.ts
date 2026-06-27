@@ -21,8 +21,19 @@ export const updateAccountSchema = createAccountSchema
     message: "Debes enviar al menos un campo para actualizar",
   });
 
+export const adjustBalanceSchema = z.object({
+  new_balance: z.coerce
+    .number({ message: "El nuevo saldo es requerido" })
+    .min(0, "El saldo no puede ser negativo"),
+  reason: z
+    .string()
+    .max(255, "La razón no puede exceder los 255 caracteres")
+    .optional(),
+});
+
 export type createAccountInput = z.infer<typeof createAccountSchema>;
 export type updateAccountInput = z.infer<typeof updateAccountSchema>;
+export type adjustBalanceInput = z.infer<typeof adjustBalanceSchema>;
 
 export const validateCreateAccount = (inputData: createAccountInput) => {
   return createAccountSchema.safeParse(inputData);
@@ -30,4 +41,8 @@ export const validateCreateAccount = (inputData: createAccountInput) => {
 
 export const validateUpdateAccount = (inputData: updateAccountInput) => {
   return updateAccountSchema.safeParse(inputData);
+};
+
+export const validateAdjustBalance = (inputData: adjustBalanceInput) => {
+  return adjustBalanceSchema.safeParse(inputData);
 };
