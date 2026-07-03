@@ -18,3 +18,5 @@ AccountRouter.get("/total-balance", AccountController.getTotalBalance);
 AccountRouter.get("/:id/movements", AccountController.getMovementsByAccount);
 
 AccountRouter.post("/:id/adjust", AccountController.adjustBalance);
+
+AccountRouter.post("/:id/transfer", AccountController.transfer);

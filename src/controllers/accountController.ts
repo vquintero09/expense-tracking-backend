@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   validateAdjustBalance,
   validateCreateAccount,
+  validateTransfer,
   validateUpdateAccount,
 } from "../schemas/account.schema.ts";
 import { AccountModel } from "../models/postsgres/accountModel.ts";
@@ -232,6 +233,51 @@ export class AccountController {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Error al ajustar el saldo";
+      res.status(400).json({ error: message });
+    }
+  }
+
+  static async transfer(
+    req: Request<{ id: string }>,
+    res: Response,
+  ): Promise<void> {
+    const { id } = req.params;
+
+    if (!validateUUID(id)) {
+      res.status(404).json({ error: "Cuenta origen no encontrada" });
+      return;
+    }
+
+    const resultValidation = validateTransfer(req.body);
+
+    if (!resultValidation.success) {
+      res.status(400).json({
+        error: "Validación fallida",
+        details: resultValidation.error.flatten(),
+      });
+      return;
+    }
+
+    if (id === resultValidation.data.to_account_id) {
+      res
+        .status(400)
+        .json({ error: "La cuenta origen y destino no pueden ser la misma" });
+      return;
+    }
+
+    try {
+      const result = await AccountModel.accountTransfer({
+        input: {
+          from_account_id: id,
+          to_account_id: resultValidation.data.to_account_id,
+          amount: resultValidation.data.amount,
+        },
+      });
+
+      res.status(201).json(result);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Error al realizar transferencia";
       res.status(400).json({ error: message });
     }
   }

@@ -8,6 +8,8 @@ import {
   IAdjustBalanceResponse,
   ICreateAccount,
   ITotalBalance,
+  ITransfer,
+  ITransferResponse,
   IUpdateAccount,
 } from "../../types/account.interface.ts";
 
@@ -298,6 +300,89 @@ export class AccountModel {
           ...movementResult.rows[0],
           category_id: adjustmentCategoryId,
           category_name: "Ajuste de saldo",
+        }),
+      };
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
+  static async accountTransfer({
+    input,
+  }: {
+    input: ITransfer;
+  }): Promise<ITransferResponse> {
+    const { from_account_id, to_account_id, amount } = input;
+
+    const fromAccount = await this.getAccountById({ id: from_account_id });
+    if (!fromAccount) throw new Error("La cuenta origen no existe");
+
+    const toAccount = await this.getAccountById({ id: to_account_id });
+    if (!toAccount) throw new Error("La cuenta destino no existe");
+
+    if (fromAccount.current_balance < amount) {
+      throw new Error("Saldo insuficiente");
+    }
+
+    // Descripciones generadas automáticamente
+    const descriptionFrom = `Transferencia a ${toAccount.name}`;
+    const descriptionTo = `Transferencia desde ${fromAccount.name}`;
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const categoryResult = await client.query(
+        `SELECT id from categories WHERE name = 'Transferencia' LIMIT 1`,
+      );
+
+      let transferCategoryId: string;
+
+      if (categoryResult.rows.length > 0) {
+        transferCategoryId = categoryResult.rows[0].id;
+      } else {
+        const newCategory = await client.query(
+          `INSERT INTO categories (category_type, name, icon, bg_color)
+          VALUES ($1, $2, $3, $4)
+          RETURNING id`,
+          ["expense", "Transferencia", "other", "gray"],
+        );
+
+        transferCategoryId = newCategory.rows[0].id;
+      }
+
+      //Egreso en cuenta origen
+      const fromMovement = await client.query(
+        `INSERT INTO expenses (movement_type, description, amount, date, category_id, account_id)
+        VALUES ('expense', $1, $2, CURRENT_DATE, $3, $4)
+        RETURNING *`,
+        [descriptionFrom, amount, transferCategoryId, from_account_id],
+      );
+
+      // Ingreso en cuenta destino
+      const toMovement = await client.query(
+        `INSERT INTO expenses (movement_type, description, amount, date, category_id, account_id)
+        VALUES ('income', $1, $2, CURRENT_DATE, $3, $4)
+        RETURNING *`,
+        [descriptionTo, amount, transferCategoryId, to_account_id],
+      );
+
+      await client.query("COMMIT");
+
+      return {
+        from_movement: mapMovement({
+          ...fromMovement.rows[0],
+          category_id: transferCategoryId,
+          category_name: "Transferencia",
+        }),
+        to_movement: mapMovement({
+          ...toMovement.rows[0],
+          category_id: transferCategoryId,
+          category_name: "Transferencia",
         }),
       };
     } catch (err) {

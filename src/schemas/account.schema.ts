@@ -31,9 +31,19 @@ export const adjustBalanceSchema = z.object({
     .optional(),
 });
 
+export const transferSchema = z.object({
+  to_account_id: z
+    .string({ error: "La cuenta destino es requerida" })
+    .uuid("El ID de la cuenta no es válido"),
+  amount: z.coerce
+    .number({ message: "El monto es requerido" })
+    .positive("El monto debe ser mayor a 0"),
+});
+
 export type createAccountInput = z.infer<typeof createAccountSchema>;
 export type updateAccountInput = z.infer<typeof updateAccountSchema>;
 export type adjustBalanceInput = z.infer<typeof adjustBalanceSchema>;
+export type transferInput = z.infer<typeof transferSchema>;
 
 export const validateCreateAccount = (inputData: createAccountInput) => {
   return createAccountSchema.safeParse(inputData);
@@ -46,3 +56,6 @@ export const validateUpdateAccount = (inputData: updateAccountInput) => {
 export const validateAdjustBalance = (inputData: adjustBalanceInput) => {
   return adjustBalanceSchema.safeParse(inputData);
 };
+
+export const validateTransfer = (inputData: transferInput) =>
+  transferSchema.safeParse(inputData);
